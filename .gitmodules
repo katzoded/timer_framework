@@ -1,0 +1,4 @@
+[submodule "extern/public/Catch2"]
+	path = extern/public/Catch2
+	url = https://github.com/catchorg/Catch2.git
+	branch = v2.13.10-2-gc359076e
