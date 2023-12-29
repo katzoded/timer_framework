@@ -201,23 +201,26 @@ typedef struct      /* Header for a linked list. */
 
 typedef int     (*DLL_EACH_FUNCPTR) (DL_NODE *node, void *cookie);     /* ptr to function returning int */
 
-/* function declarations */
-DL_LIST *dllCreate (void);
-DL_NODE *dllGet (DL_LIST *pList);
-short   dllDelete (DL_LIST *pList);
-short   dllInit (DL_LIST *pList);
-short   dllTerminate (DL_LIST *pList);
-int      dllCount (DL_LIST *pList);
-void     dllAdd (DL_LIST *pList, DL_NODE *pNode);
-void     dllInsert (DL_LIST *pList, DL_NODE *pPrev, DL_NODE *pNode);
-void     dllRemove (DL_LIST *pList, DL_NODE *pNode);
-DL_NODE *dllEach(DL_LIST     *pList,         /* linked list of nodes to call routine for */
-                 DLL_EACH_FUNCPTR     routine,        /* the routine to call for each list node */
-                void *      routineArg      /* arbitrary user-supplied argument */
-                );
 
+/*********************************************************************
+*
+* dllInit - initialize doubly linked list descriptor
+*
+* Initialize the specified list to an empty list.
+*
+* RETURNS: OK, or ERROR if doubly linked list could not be initialized.
+*/
 
+__inline__ short dllInit
+        (
+                DL_LIST *pList     /* pointer to list descriptor to be initialized */
+        )
+{
+    pList->head	 = nullptr;
+    pList->tail  = nullptr;
 
+    return (OK);
+}
 
 /*********************************************************************
 *
@@ -229,33 +232,13 @@ DL_NODE *dllEach(DL_LIST     *pList,         /* linked list of nodes to call rou
 * RETURNS: Pointer to a doubly linked list descriptor, or nullptr if ERROR.
 */
 
-DL_LIST *dllCreate (void)
+__inline__ DL_LIST *dllCreate (void)
 {
     DL_LIST *pList = (DL_LIST *) malloc ((unsigned) sizeof (DL_LIST));
 
     dllInit (pList);
 
     return (pList);
-}
-
-/*********************************************************************
-*
-* dllInit - initialize doubly linked list descriptor
-*
-* Initialize the specified list to an empty list.
-*
-* RETURNS: OK, or ERROR if doubly linked list could not be initialized.
-*/
-
-short dllInit
-        (
-                DL_LIST *pList     /* pointer to list descriptor to be initialized */
-        )
-{
-    pList->head	 = nullptr;
-    pList->tail  = nullptr;
-
-    return (OK);
 }
 
 /*******************************************************************************
@@ -269,7 +252,7 @@ short dllInit
 * ARGSUSED
 */
 
-short dllDelete
+__inline__ short dllDelete
         (
                 DL_LIST *pList     /* pointer to list head to be initialized */
         )
@@ -289,7 +272,7 @@ short dllDelete
 * ARGSUSED
 */
 
-short dllTerminate
+__inline__ short dllTerminate
         (
                 DL_LIST *pList     /* pointer to list head to be initialized */
         )
@@ -307,7 +290,7 @@ short dllTerminate
 * of the list.
 */
 
-void dllInsert
+__inline__ void dllInsert
         (
                 DL_LIST *pList,        /* pointer to list descriptor */
                 DL_NODE *pPrev,        /* pointer to node after which to insert */
@@ -346,7 +329,7 @@ void dllInsert
 * This routine adds the specified node to the end of the specified list.
 */
 
-void dllAdd
+__inline__ void dllAdd
         (
                 DL_LIST *pList,     /* pointer to list descriptor */
                 DL_NODE *pNode      /* pointer to node to be added */
@@ -362,7 +345,7 @@ void dllAdd
 * Remove the specified node in the doubly linked list.
 */
 
-void dllRemove
+__inline__ void dllRemove
         (
                 DL_LIST *pList,             /* pointer to list descriptor */
                 DL_NODE *pNode              /* pointer to node to be deleted */
@@ -388,7 +371,7 @@ void dllRemove
 * RETURNS: Pointer to the node gotten, or nullptr if the list is empty.
 */
 
-DL_NODE *dllGet
+__inline__ DL_NODE *dllGet
         (
                 DL_LIST *pList         /* pointer to list from which to get node */
         )
@@ -425,7 +408,7 @@ DL_NODE *dllGet
 * SEE ALSO: lstLib(1).
 */
 
-int dllCount
+__inline__ int dllCount
         (
                 DL_LIST *pList      /* pointer to list descriptor */
         )
@@ -464,7 +447,7 @@ int dllCount
 *          dllEach ended with.
 */
 
-DL_NODE *dllEach
+__inline__ DL_NODE *dllEach
         (
                 DL_LIST     *pList,         /* linked list of nodes to call routine for */
                 DLL_EACH_FUNCPTR     routine,        /* the routine to call for each list node */
@@ -483,17 +466,6 @@ DL_NODE *dllEach
 
     return (pNode);			/* return node we ended with */
 }
-
-
-//#define DLL_EACH(pList, routine, args...) \
-//{ \
-//    DL_NODE *pNode = DLL_FIRST (pList); \
-//    \
-//    while ((pNode != nullptr) && ((* routine) (pNode, args))) { \
-//        pNode = DLL_NEXT (pNode);         \
-//    } \
-//    return (pNode);			/* return node we ended with */ \
-//}
 
 
 #ifdef __cplusplus

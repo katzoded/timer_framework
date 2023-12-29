@@ -1,16 +1,15 @@
 #define UNIT_TESTING
-#include "timer_manager.hpp"
+#include "no_thread_timer_manager.hpp"
 #include "catch.hpp"
 
 using namespace std;
 
 
-NoThreadTimerManager_t test_subject_nano(nano_sec);
-NoThreadTimerManager_t test_subject_milli(milli_sec);
-NoThreadTimerManager_t test_subject_sec(single_sec);
+//static NoThreadTimerManager_t test_subject_sec(single_sec);
 
-TEST_CASE("nano-sec-no-thread-timer", "nano-sec")
+SCENARIO("nano-sec-no-thread-timer")
 {
+    NoThreadTimerManager_t test_subject_nano(nano_sec);
     SECTION("test 100 nano sec exp")
     {
         bool expired = false;
@@ -26,7 +25,7 @@ TEST_CASE("nano-sec-no-thread-timer", "nano-sec")
         REQUIRE(expired == true);
         REQUIRE(101 == test_subject_nano.get_current_tick() - start_time);
     }
-    SECTION("test 100080 nano sec exp")
+    SECTION("test 10080 nano sec exp")
     {
         bool expired = false;
         uint64_t start_time = test_subject_nano.get_current_tick();
@@ -44,7 +43,7 @@ TEST_CASE("nano-sec-no-thread-timer", "nano-sec")
         REQUIRE(expired == true);
         REQUIRE(10080 == test_subject_nano.get_current_tick() - start_time);
     }
-    SECTION("test 100000 nano sec exp")
+    SECTION("test 10000 nano sec exp")
     {
         bool expired = false;
         uint64_t start_time = test_subject_nano.get_current_tick();
@@ -82,8 +81,9 @@ TEST_CASE("nano-sec-no-thread-timer", "nano-sec")
     }
 }
 
-TEST_CASE("mill-sec-no-thread-timer", "mill-sec")
+SCENARIO("mill-sec-no-thread-timer")
 {
+    NoThreadTimerManager_t test_subject_milli(milli_sec);
     SECTION("test 100 nano sec, not valid")
     {
         test_subject_milli.StartTimer(std::chrono::duration_cast<std::chrono::nanoseconds>(100ns).count(), [&](TIMER_HANDLE timer, void *cookie) {

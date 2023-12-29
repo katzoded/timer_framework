@@ -6,6 +6,8 @@
 #include <chrono>
 #include <iostream>
 #include <string.h>
+#include <shared_mutex>
+#include <thread>
 #include "dllLib.h"
 
 #ifndef OFFSET
@@ -52,7 +54,7 @@ public:
     }
     ~NoThreadTimerManager_t() {
     }
-    TIMER_HANDLE StartTimer(uint64_t timeout_in_nano, timer_callback_t timer_callback, void *timer_cookie) {
+    virtual TIMER_HANDLE StartTimer(uint64_t timeout_in_nano, timer_callback_t timer_callback, void *timer_cookie) {
         if (timeout_in_nano < timer_unit_data_[minimal_tick_unit_].get_unit_divider()) {
             return nullptr;
         }
@@ -68,12 +70,9 @@ public:
         size_++;
         return (TIMER_HANDLE)entry;
     }
-    void StopTimer(TIMER_HANDLE timer_handle) {
+    virtual void StopTimer(TIMER_HANDLE timer_handle) {
         TimerEntry_t *entry = (TimerEntry_t *)timer_handle;
-        dllRemove(entry->list, &entry->node);
-        delete entry;
-
-        size_--;
+        remove_timer(entry);
     }
     void ProcessTick() {
         auto now = get_current_tick_pfn_(this);
@@ -91,10 +90,7 @@ public:
             previous_processed_tick_ = now;
         }
     }
-private:
-    static uint64_t get_current_nano_ticks(NoThreadTimerManager_t *this_obj) {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    }
+protected:
     struct TimerEntry_t {
         uint64_t interval_nano_sec;
         uint64_t adjusted_interval_nano_sec;
@@ -155,7 +151,7 @@ private:
                     }
                     else {
                         timer_entry->app_callback((TIMER_HANDLE)timer_entry, timer_entry->app_cookie);
-                        manager_->StopTimer((TIMER_HANDLE)timer_entry);
+                        manager_->remove_timer(timer_entry);
                     }
                 }
                 current_index_++;
@@ -187,12 +183,24 @@ private:
         NoThreadTimerManager_t *manager_ = nullptr;
 
     };
+
+    time_unit_t minimal_tick_unit_;
+    TimerUnitData_t timer_unit_data_[time_unit_last];
+
+private:
+    void remove_timer(TimerEntry_t *entry) {
+        dllRemove(entry->list, &entry->node);
+        delete entry;
+
+        size_--;
+    }
+    static uint64_t get_current_nano_ticks(NoThreadTimerManager_t *this_obj) {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    }
     using get_current_time_cb_t=uint64_t(*)(NoThreadTimerManager_t *this_obj);
 
     get_current_time_cb_t get_current_tick_pfn_;
-    time_unit_t minimal_tick_unit_;
-    TimerUnitData_t timer_unit_data_[time_unit_last];
-    uint32_t size_;
+    uint32_t size_ = 0;
     uint64_t previous_processed_tick_ = 0;
     
 #ifdef UNIT_TESTING
@@ -201,13 +209,16 @@ private:
     static uint64_t ut_get_current_nano_ticks(NoThreadTimerManager_t *this_obj) {
         return this_obj->next_nano_tick;
     }
-public:
-    uint64_t get_current_tick() {
-        return previous_processed_tick_;
-    }
+
+protected:
     void set_next_tick(int64_t nano_ticks_to_advance) {
         get_current_tick_pfn_ = ut_get_current_nano_ticks;
         next_nano_tick = previous_processed_tick_ + nano_ticks_to_advance;
+    }
+
+public:
+    uint64_t get_current_tick() {
+        return previous_processed_tick_;
     }
     void advance(int64_t nano_ticks_to_advance) {
         set_next_tick(nano_ticks_to_advance);
@@ -216,25 +227,5 @@ public:
     inline uint32_t number_of_active_timers() {
         return size_;
     }
-    
 #endif // UNIT_TESTING
-};
-
-class WithThreadTimerManager : public NoThreadTimerManager_t
-{
-public:
-    WithThreadTimerManager(time_unit_t minimal_tick_unit) {
-
-    }
-
-    ~WithThreadTimerManager() {
-
-    }
-    boolean AddTimer(SingleThread_TimerEntry *apEntry);
-    boolean CancelTimer(SingleThread_TimerEntry *apEntry);
-    static void * TimeoutThreadStart(void* arg);
-
-private:
-    CCL_Mutex	    m_PoolLock;
-    CCL_Thread*		m_pTimeoutThread;
 };
