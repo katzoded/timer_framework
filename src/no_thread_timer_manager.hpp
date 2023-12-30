@@ -72,7 +72,10 @@ public:
     }
     virtual void StopTimer(TIMER_HANDLE timer_handle) {
         TimerEntry_t *entry = (TimerEntry_t *)timer_handle;
-        remove_timer(entry);
+
+        if (entry) {
+            remove_timer(entry);
+        }
     }
     void ProcessTick() {
         auto now = get_current_tick_pfn_(this);
@@ -86,8 +89,8 @@ public:
         uint64_t ticks_since_last_process_tick = time_diff / timer_unit_data_[minimal_tick_unit_].get_unit_divider();
 
         if (ticks_since_last_process_tick) {
-            timer_unit_data_[minimal_tick_unit_].process_tick(ticks_since_last_process_tick);
             previous_processed_tick_ = now;
+            timer_unit_data_[minimal_tick_unit_].process_tick(ticks_since_last_process_tick);
         }
     }
 protected:
@@ -202,7 +205,7 @@ private:
     get_current_time_cb_t get_current_tick_pfn_;
     uint32_t size_ = 0;
     uint64_t previous_processed_tick_ = 0;
-    
+
 #ifdef UNIT_TESTING
 private:
     uint64_t next_nano_tick = 0;
