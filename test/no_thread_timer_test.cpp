@@ -14,7 +14,7 @@ SCENARIO("nano-sec-no-thread-timer")
     {
         bool expired = false;
         uint64_t start_time = test_subject_nano.get_current_tick();
-        test_subject_nano.StartTimer(std::chrono::duration_cast<std::chrono::nanoseconds>(100ns).count(), [&](TIMER_HANDLE timer, void *cookie) {
+        test_subject_nano.start_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(100ns).count(), [&](TIMER_HANDLE timer, void *cookie) {
             expired = true;
             uint64_t expiration_time = test_subject_nano.get_current_tick() - start_time;
         }, nullptr);
@@ -29,7 +29,7 @@ SCENARIO("nano-sec-no-thread-timer")
     {
         bool expired = false;
         uint64_t start_time = test_subject_nano.get_current_tick();
-        test_subject_nano.StartTimer(std::chrono::duration_cast<std::chrono::nanoseconds>(10080ns).count(), [&](TIMER_HANDLE timer, void *cookie) {
+        test_subject_nano.start_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(10080ns).count(), [&](TIMER_HANDLE timer, void *cookie) {
             expired = true;
             uint64_t expiration_time = test_subject_nano.get_current_tick() - start_time;
         }, nullptr);
@@ -47,7 +47,7 @@ SCENARIO("nano-sec-no-thread-timer")
     {
         bool expired = false;
         uint64_t start_time = test_subject_nano.get_current_tick();
-        test_subject_nano.StartTimer(std::chrono::duration_cast<std::chrono::nanoseconds>(10000ns).count(), [&](TIMER_HANDLE timer, void *cookie) {
+        test_subject_nano.start_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(10000ns).count(), [&](TIMER_HANDLE timer, void *cookie) {
             expired = true;
             uint64_t expiration_time = test_subject_nano.get_current_tick() - start_time;
         }, nullptr);
@@ -65,7 +65,7 @@ SCENARIO("nano-sec-no-thread-timer")
     {
         bool expired = false;
         uint64_t start_time = test_subject_nano.get_current_tick();
-        test_subject_nano.StartTimer(std::chrono::duration_cast<std::chrono::nanoseconds>(100ms + 50us + 300ns).count(), [&](TIMER_HANDLE timer, void *cookie) {
+        test_subject_nano.start_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(100ms + 50us + 300ns).count(), [&](TIMER_HANDLE timer, void *cookie) {
             expired = true;
             uint64_t expiration_time = test_subject_nano.get_current_tick() - start_time;
         }, nullptr);
@@ -86,7 +86,7 @@ SCENARIO("mill-sec-no-thread-timer")
     NoThreadTimerManager_t test_subject_milli(milli_sec);
     SECTION("test 100 nano sec, not valid")
     {
-        test_subject_milli.StartTimer(std::chrono::duration_cast<std::chrono::nanoseconds>(100ns).count(), [&](TIMER_HANDLE timer, void *cookie) {
+        test_subject_milli.start_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(100ns).count(), [&](TIMER_HANDLE timer, void *cookie) {
         }, nullptr);
         REQUIRE(0 == test_subject_milli.number_of_active_timers());
     }
@@ -94,7 +94,7 @@ SCENARIO("mill-sec-no-thread-timer")
     {
         bool expired = false;
         uint64_t start_time = test_subject_milli.get_current_tick();
-        test_subject_milli.StartTimer(std::chrono::duration_cast<std::chrono::nanoseconds>(100ms).count(), [&](TIMER_HANDLE timer, void *cookie) {
+        test_subject_milli.start_timer(std::chrono::duration_cast<std::chrono::nanoseconds>(100ms).count(), [&](TIMER_HANDLE timer, void *cookie) {
             expired = true;
             uint64_t expiration_time = test_subject_milli.get_current_tick() - start_time;
         }, nullptr);

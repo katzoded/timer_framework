@@ -33,7 +33,9 @@ enum time_unit_t {
 class NoThreadTimerManager_t
 {
 public:
-    NoThreadTimerManager_t(time_unit_t minimal_tick_unit) {
+    NoThreadTimerManager_t(time_unit_t minimal_tick_unit = nano_sec,
+                           time_unit_t maximal_tick_unit = time_unit_last,
+                           uint8_t *optimal_tick[time_unit_last] = nullptr) {
         minimal_tick_unit_ = minimal_tick_unit;
         uint64_t unit_divider = 1;
         TimerUnitData_t *next_unit = nullptr;
@@ -54,7 +56,7 @@ public:
     }
     ~NoThreadTimerManager_t() {
     }
-    virtual TIMER_HANDLE StartTimer(uint64_t timeout_in_nano, timer_callback_t timer_callback, void *timer_cookie) {
+    virtual TIMER_HANDLE start_timer(uint64_t timeout_in_nano, timer_callback_t timer_callback, void *timer_cookie) {
         if (timeout_in_nano < timer_unit_data_[minimal_tick_unit_].get_unit_divider()) {
             return nullptr;
         }
@@ -70,14 +72,14 @@ public:
         size_++;
         return (TIMER_HANDLE)entry;
     }
-    virtual void StopTimer(TIMER_HANDLE timer_handle) {
+    virtual void stop_timer(TIMER_HANDLE timer_handle) {
         TimerEntry_t *entry = (TimerEntry_t *)timer_handle;
 
         if (entry) {
             remove_timer(entry);
         }
     }
-    void ProcessTick() {
+    void process_tick() {
         auto now = get_current_tick_pfn_(this);
 
         if (now < previous_processed_tick_) {
@@ -130,11 +132,13 @@ protected:
         }
         void add_timer(TimerEntry_t *entry) {
             uint16_t index = (entry->adjusted_interval_nano_sec / unit_divider_) % MAX_TICKS_PER_UNIT;
-            if (0 == index) {
-                next_unit_->add_timer(entry);
-                return;
+            if (0 == entry->adjusted_interval_nano_sec) {
+                if (0 == index) {
+                    next_unit_->add_timer(entry);
+                    return;
+                }
+                index--;
             }
-            index--;
             uint16_t offset = (current_index_ + index) % MAX_TICKS_PER_UNIT;
 
             entry->list = &timer_array_[offset];
@@ -173,13 +177,13 @@ protected:
             return (apNode) ? (TimerEntry_t *)((char *)apNode - OFFSET(TimerEntry_t, node)) : NULL;
         }
         static int each_stop_timer(DL_NODE *apNode, TimerUnitData_t *pThis) {
-            pThis->manager_->StopTimer((TIMER_HANDLE)get_obj_by_node(apNode));
+            pThis->manager_->stop_timer((TIMER_HANDLE) get_obj_by_node(apNode));
             return 1;
         }
     private:
         DL_LIST timer_array_[MAX_TICKS_PER_UNIT] = {};
-        uint16_t num_indexes_ = 0;
         uint16_t current_index_ = 0;
+        uint8_t tick_optimizer = 1;
         uint64_t unit_divider_ = 0;
 
         TimerUnitData_t *next_unit_ = nullptr;
@@ -225,7 +229,7 @@ public:
     }
     void advance(int64_t nano_ticks_to_advance) {
         set_next_tick(nano_ticks_to_advance);
-        ProcessTick();
+        process_tick();
     }
     inline uint32_t number_of_active_timers() {
         return size_;

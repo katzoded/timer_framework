@@ -13,7 +13,12 @@
 class WithThreadTimerManager : public NoThreadTimerManager_t
 {
 public:
-    WithThreadTimerManager(time_unit_t minimal_tick_unit, int64_t sleep_tick_multiplier = 1) : NoThreadTimerManager_t(minimal_tick_unit){
+    WithThreadTimerManager(time_unit_t minimal_tick_unit = nano_sec,
+                           time_unit_t maximal_tick_unit = time_unit_last,
+                           uint8_t *optimal_tick[time_unit_last] = nullptr,
+                           int64_t sleep_tick_multiplier = 1) :
+                           NoThreadTimerManager_t(minimal_tick_unit, maximal_tick_unit, optimal_tick)
+                           {
         uint64_t sec_in_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
         uint64_t tick_sleep = ((sleep_tick_multiplier != 0 ) ? sleep_tick_multiplier : 1) * timer_unit_data_[minimal_tick_unit_].get_unit_divider();
         sleep_request_.tv_sec = tick_sleep / sec_in_nano;
@@ -25,7 +30,7 @@ public:
                 struct timespec remaining;
                 if (0 == nanosleep(&sleep_request_, &remaining)) {
                     std::lock_guard<std::shared_mutex> lock(mutex_);
-                    ProcessTick();
+                    process_tick();
                 }
             }
             ended_ = true;
@@ -41,13 +46,13 @@ public:
             nanosleep(&request, &remaining);
         }
     }
-    virtual TIMER_HANDLE StartTimer(uint64_t timeout_in_nano, timer_callback_t timer_callback, void *timer_cookie) {
+    virtual TIMER_HANDLE start_timer(uint64_t timeout_in_nano, timer_callback_t timer_callback, void *timer_cookie) {
         std::lock_guard<std::shared_mutex> lock(mutex_);
-        return NoThreadTimerManager_t::StartTimer(timeout_in_nano, timer_callback, timer_cookie);
+        return NoThreadTimerManager_t::start_timer(timeout_in_nano, timer_callback, timer_cookie);
     }
-    virtual void StopTimer(TIMER_HANDLE timer_handle) {
+    virtual void stop_timer(TIMER_HANDLE timer_handle) {
         std::lock_guard<std::shared_mutex> lock(mutex_);
-        NoThreadTimerManager_t::StopTimer(timer_handle);
+        NoThreadTimerManager_t::stop_timer(timer_handle);
     }
 #ifdef UNIT_TESTING
     void advance(int64_t nano_ticks_to_advance) {
