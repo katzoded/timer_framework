@@ -201,17 +201,20 @@ protected:
 
             if (now < last_processed_tick_) {
                 set_last_processed_tick(now);
-                next_unit_->process_tick();
+                if (next_unit_) {
+                    next_unit_->process_tick();
+                }
                 return;
             }
             auto time_diff = now - last_processed_tick_;
 
             uint64_t ticks_since_last_process_tick = time_diff / unit_divider_ / tick_optimizer_;
-            uint64_t tick_left_overs_for_next = ((time_diff / unit_divider_) % tick_optimizer_);
+            uint64_t tick_left_overs_for_next = time_diff % (unit_divider_ * tick_optimizer_);
 
             if (ticks_since_last_process_tick) {
+                bool passed_cycle = false;
                 TimerEntry_t* timer_entry;
-                set_last_processed_tick(now - (unit_divider_ * tick_left_overs_for_next));
+                set_last_processed_tick(now - tick_left_overs_for_next);
 
                 for(int i = 0; i < ticks_since_last_process_tick; i++)
                 {
@@ -229,12 +232,13 @@ protected:
                     }
                     current_index_++;
                     if (current_index_ == optimized_ticks_for_overlap) {
+                        passed_cycle = true;
                         current_index_ = 0;
                     }
                 }
-            }
-            if (next_unit_) {
-                next_unit_->process_tick();
+                if (passed_cycle && next_unit_) {
+                    next_unit_->process_tick();
+                }
             }
         }
 

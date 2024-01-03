@@ -154,4 +154,20 @@ SCENARIO("nano-sec-with-100-ns-optimization-thread-timer")
         REQUIRE(expired == true);
         REQUIRE(CONVERT_2_NANO(microseconds, 1000) == test_subject_nano.get_previous_processed_tick() - start_time);
     }
+    SECTION("test 1000 micro sec exp with time-backward")
+    {
+        bool expired = false;
+        test_subject_nano.start_timer(CONVERT_2_NANO(microseconds, 1000), [&](TIMER_HANDLE timer, void *cookie) {
+            expired = true;
+        }, nullptr);
+        test_subject_nano.advance(CONVERT_2_NANO(microseconds, -999));
+        uint64_t start_time = test_subject_nano.get_previous_processed_tick();
+        test_subject_nano.advance(CONVERT_2_NANO(microseconds, 999) + CONVERT_2_NANO(nanoseconds, 115));
+        REQUIRE(expired == false);
+        REQUIRE(CONVERT_2_NANO(microseconds, 999) +
+                CONVERT_2_NANO(nanoseconds, 115) == test_subject_nano.get_previous_processed_tick() - start_time);
+        test_subject_nano.advance(CONVERT_2_NANO(nanoseconds, 885));
+        REQUIRE(expired == true);
+        REQUIRE(CONVERT_2_NANO(microseconds, 1000) == test_subject_nano.get_previous_processed_tick() - start_time);
+    }
 }
