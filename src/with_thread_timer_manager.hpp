@@ -15,12 +15,11 @@ class WithThreadTimerManager : public NoThreadTimerManager_t
 public:
     WithThreadTimerManager(time_unit_t minimal_tick_unit = nano_sec,
                            time_unit_t maximal_tick_unit = time_unit_last,
-                           uint8_t *optimal_tick[time_unit_last] = nullptr,
-                           int64_t sleep_tick_multiplier = 1) :
+                           uint8_t optimal_tick[time_unit_array_size] = {}) :
                            NoThreadTimerManager_t(minimal_tick_unit, maximal_tick_unit, optimal_tick)
                            {
         uint64_t sec_in_nano = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
-        uint64_t tick_sleep = ((sleep_tick_multiplier != 0 ) ? sleep_tick_multiplier : 1) * timer_unit_data_[minimal_tick_unit_].get_unit_divider();
+        uint64_t tick_sleep =  timer_unit_data_[minimal_tick_unit_].get_tick_optimizer() * timer_unit_data_[minimal_tick_unit_].get_unit_divider();
         sleep_request_.tv_sec = tick_sleep / sec_in_nano;
         sleep_request_.tv_nsec = tick_sleep % sec_in_nano;
         running_ = true;
