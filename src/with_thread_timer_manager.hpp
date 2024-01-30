@@ -53,6 +53,15 @@ public:
         std::lock_guard<std::shared_mutex> lock(mutex_);
         NoThreadTimerManager_t::stop_timer(timer_handle);
     }
+    virtual uint64_t query_timer_for_time_left(TIMER_HANDLE timer_handle) {
+        std::lock_guard<std::shared_mutex> lock(mutex_);
+        return NoThreadTimerManager_t::query_timer_for_time_left(timer_handle);
+    }
+    virtual uint64_t query_timer_for_time_set(TIMER_HANDLE timer_handle) {
+        std::lock_guard<std::shared_mutex> lock(mutex_);
+        return NoThreadTimerManager_t::query_timer_for_time_set(timer_handle);
+    }
+
 #ifdef UNIT_TESTING
     void advance(int64_t nano_ticks_to_advance) {
         set_next_tick(nano_ticks_to_advance);

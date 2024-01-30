@@ -97,6 +97,24 @@ public:
         }
     }
 
+    virtual uint64_t query_timer_for_time_left(TIMER_HANDLE timer_handle) {
+        TimerEntry_t *entry = (TimerEntry_t *)timer_handle;
+
+        if (entry) {
+            return entry->adjusted_interval_nano_sec;
+        }
+        return 0;
+    }
+
+    virtual uint64_t query_timer_for_time_set(TIMER_HANDLE timer_handle) {
+        TimerEntry_t *entry = (TimerEntry_t *)timer_handle;
+
+        if (entry) {
+            return entry->interval_nano_sec;
+        }
+        return 0;
+    }
+
     void process_tick() {
         previous_processed_tick_ = get_current_tick_pfn_(this);
         timer_unit_data_[minimal_tick_unit_].process_tick();
